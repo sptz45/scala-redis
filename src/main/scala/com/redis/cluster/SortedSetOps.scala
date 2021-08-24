@@ -82,6 +82,18 @@ trait SortedSetOps extends SortedSetApi {
                              (implicit format: Format, parse: Parse[A]): Option[List[A]] =
     processForKey(key)(_.zrangebylex(key, min, max, limit))
 
+  override def zpopmax[A](key: Any, count: Int = 1)(implicit format: Format, parse: Parse[A]): Option[List[(A, Double)]] =
+    processForKey(key)(_.zpopmax[A](key, count))
+
+  override def zpopmin[A](key: Any, count: Int = 1)(implicit format: Format, parse: Parse[A]): Option[List[(A, Double)]] =
+    processForKey(key)(_.zpopmax[A](key, count))
+
+  override def bzpopmax[K, V](timeoutInSeconds: Int, key: K, keys: K*)(implicit format: Format, parseK: Parse[K], parseV: Parse[V]): Option[(K, V, Double)] =
+    inSameNode((key :: keys.toList): _*) { n => n.bzpopmax[K, V](timeoutInSeconds, key, keys: _*) }
+
+  override def bzpopmin[K, V](timeoutInSeconds: Int, key: K, keys: K*)(implicit format: Format, parseK: Parse[K], parseV: Parse[V]): Option[(K, V, Double)] =
+    inSameNode((key :: keys.toList): _*) { n => n.bzpopmin[K, V](timeoutInSeconds, key, keys: _*) }
+
   override def zscan[A](key: Any, cursor: Int, pattern: Any, count: Int)
                        (implicit format: Format, parse: Parse[A]): Option[(Option[Int], Option[List[Option[A]]])] =
     processForKey(key)(_.zscan(key, cursor, pattern, count))

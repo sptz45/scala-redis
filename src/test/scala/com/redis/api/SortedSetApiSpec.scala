@@ -24,6 +24,10 @@ trait SortedSetApiSpec extends FunSpec
   zcountT()
   zrangebyscoreT()
   zrangebyscoreWithScoreT()
+  zpopmin()
+  zpopmax()
+  bzpopmin()
+  bzpopmax()
 
   private def add = {
     r.zadd("hackers", 1965, "yukihiro matsumoto") should equal(Some(1))
@@ -214,22 +218,62 @@ trait SortedSetApiSpec extends FunSpec
   }
 
   protected def zrangebyscoreWithScoreT(): Unit = {
-  describe("zrangebyscoreWithScore") {
-    it ("should return the elements between min and max") {
-      add
+    describe("zrangebyscoreWithScore") {
+      it ("should return the elements between min and max") {
+        add
 
-      r.zrangebyscoreWithScore("hackers", 1940, true, 1969, true, None).get should equal(
-        List(("alan kay", 1940.0), ("richard stallman", 1953.0), ("yukihiro matsumoto", 1965.0), ("linus torvalds", 1969.0)))
+        r.zrangebyscoreWithScore("hackers", 1940, true, 1969, true, None).get should equal(
+          List(("alan kay", 1940.0), ("richard stallman", 1953.0), ("yukihiro matsumoto", 1965.0), ("linus torvalds", 1969.0)))
 
-      r.zrangebyscoreWithScore("hackers", 1940, true, 1969, true, None, DESC).get should equal(
-        List(("linus torvalds", 1969.0), ("yukihiro matsumoto", 1965.0), ("richard stallman", 1953.0),("alan kay", 1940.0)))
+        r.zrangebyscoreWithScore("hackers", 1940, true, 1969, true, None, DESC).get should equal(
+          List(("linus torvalds", 1969.0), ("yukihiro matsumoto", 1965.0), ("richard stallman", 1953.0),("alan kay", 1940.0)))
 
-      r.zrangebyscoreWithScore("hackers", 1940, true, 1969, true, Some(3, 1)).get should equal (
-        List(("linus torvalds", 1969.0)))
+        r.zrangebyscoreWithScore("hackers", 1940, true, 1969, true, Some(3, 1)).get should equal (
+          List(("linus torvalds", 1969.0)))
 
-      r.zrangebyscoreWithScore("hackers", 1940, true, 1969, true, Some(3, 1), DESC).get should equal (
-        List(("alan kay", 1940.0)))
+        r.zrangebyscoreWithScore("hackers", 1940, true, 1969, true, Some(3, 1), DESC).get should equal (
+          List(("alan kay", 1940.0)))
+      }
     }
   }
+
+  protected def zpopmin(): Unit = {
+    describe("zpopmin") {
+      it ("should return 'count' number of elements with the lowest score") {
+        add
+
+        r.zpopmin("hackers", 2).get should equal(List(("alan turing", 1912), ("claude shannon", 1916)))
+      }
+    }
+  }
+
+  protected def zpopmax(): Unit = {
+    describe("zpopmax") {
+      it ("should return 'count' number of elements with the lowest score") {
+        add
+
+        r.zpopmax("hackers", 2).get should equal(List(("linus torvalds", 1969), ("yukihiro matsumoto", 1965)))
+      }
+    }
+  }
+
+  protected def bzpopmin(): Unit = {
+    describe("bzpopmin") {
+      it ("should return 'count' number of elements with the lowest score") {
+        add
+
+        r.bzpopmin(1, "hackers").get should equal(("hackers", "alan turing", 1912))
+      }
+    }
+  }
+
+  protected def bzpopmax(): Unit = {
+    describe("bzpopmax") {
+      it ("should return 'count' number of elements with the lowest score") {
+        add
+
+        r.bzpopmax(1, "hackers") should equal(("hackers", "linus torvalds", 1969))
+      }
+    }
   }
 }

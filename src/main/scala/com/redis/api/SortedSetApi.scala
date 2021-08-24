@@ -59,6 +59,14 @@ trait SortedSetApi {
 
   def zcount(key: Any, min: Double = Double.NegativeInfinity, max: Double = Double.PositiveInfinity, minInclusive: Boolean = true, maxInclusive: Boolean = true)(implicit format: Format): Option[Long]
 
+  def zpopmax[A](key: Any, count: Int = 1)(implicit format: Format, parse: Parse[A]): Option[List[(A, Double)]]
+
+  def zpopmin[A](key: Any, count: Int = 1)(implicit format: Format, parse: Parse[A]): Option[List[(A, Double)]]
+
+  def bzpopmax[K, V](timeoutInSeconds: Int, key: K, keys: K*)(implicit format: Format, parseK: Parse[K], parseV: Parse[V]): Option[(K, V, Double)]
+
+  def bzpopmin[K, V](timeoutInSeconds: Int, key: K, keys: K*)(implicit format: Format, parseK: Parse[K], parseV: Parse[V]): Option[(K, V, Double)]
+
   /**
    * Incrementally iterate sorted sets elements and associated scores (since 2.8)
    */

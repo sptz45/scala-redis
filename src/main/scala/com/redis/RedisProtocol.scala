@@ -2,6 +2,7 @@ package com.redis
 
 import serialization.Parse
 import Parse.{Implicits => Parsers}
+import com.redis.serialization.{Format}
 
 case class GeoRadiusMember(member: Option[String],
                            hash: Option[Long] = None,
@@ -264,6 +265,12 @@ private [redis] trait R extends Reply {
   def asListPairs[A,B](implicit parseA: Parse[A], parseB: Parse[B]): Option[List[Option[(A,B)]]] =
     receive(multiBulkReply).map(_.grouped(2).flatMap{
       case List(Some(a), Some(b)) => Iterator.single(Some((parseA(a), parseB(b))))
+      case _ => Iterator.single(None)
+    }.toList)
+
+  def asListTrios[A,B](implicit parseA: Parse[A], parseB: Parse[B], format: Format): Option[List[Option[(A,B,Double)]]] =
+    receive(multiBulkReply).map(_.grouped(3).flatMap{
+      case List(Some(a), Some(b), Some(c)) => Iterator.single(Some((parseA(a), parseB(b), Parse.Implicits.parseDouble(c))))
       case _ => Iterator.single(None)
     }.toList)
 

@@ -118,6 +118,18 @@ trait SortedSetOperations extends SortedSetApi {
   override def zcount(key: Any, min: Double = Double.NegativeInfinity, max: Double = Double.PositiveInfinity, minInclusive: Boolean = true, maxInclusive: Boolean = true)(implicit format: Format): Option[Long] =
     send("ZCOUNT", List(key, Format.formatDouble(min, minInclusive), Format.formatDouble(max, maxInclusive)))(asLong)
 
+  override def zpopmax[A](key: Any, count: Int = 1)(implicit format: Format, parse: Parse[A]): Option[List[(A, Double)]] =
+    send("ZPOPMAX", List(key, count))(asListPairs(parse, Parse.Implicits.parseDouble).map(_.flatten))
+
+  override def zpopmin[A](key: Any, count: Int = 1)(implicit format: Format, parse: Parse[A]): Option[List[(A, Double)]] =
+    send("ZPOPMIN", List(key, count))(asListPairs(parse, Parse.Implicits.parseDouble).map(_.flatten))
+
+  override def bzpopmax[K, V](timeoutInSeconds: Int, key: K, keys: K*)(implicit format: Format, parseK: Parse[K], parseV: Parse[V]): Option[(K, V, Double)] =
+    send("BZPOPMAX", key :: keys.foldRight(List[Any](timeoutInSeconds))(_ :: _))(asListTrios[K, V].flatMap(_.flatten.headOption))
+
+  override def bzpopmin[K, V](timeoutInSeconds: Int, key: K, keys: K*)(implicit format: Format, parseK: Parse[K], parseV: Parse[V]): Option[(K, V, Double)] =
+    send("BZPOPMIN", key :: keys.foldRight(List[Any](timeoutInSeconds))(_ :: _))(asListTrios[K, V].flatMap(_.flatten.headOption))
+
   override def zscan[A](key: Any, cursor: Int, pattern: Any = "*", count: Int = 10)(implicit format: Format, parse: Parse[A]): Option[(Option[Int], Option[List[Option[A]]])] =
     send("ZSCAN", key :: cursor :: ((x: List[Any]) => if (pattern == "*") x else "match" :: pattern :: x) (if (count == 10) Nil else List("count", count)))(asPair)
 
