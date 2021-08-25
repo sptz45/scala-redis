@@ -2,7 +2,6 @@ package com.redis
 
 import serialization.Parse
 import Parse.{Implicits => Parsers}
-import com.redis.serialization.{Format}
 
 case class GeoRadiusMember(member: Option[String],
                            hash: Option[Long] = None,
