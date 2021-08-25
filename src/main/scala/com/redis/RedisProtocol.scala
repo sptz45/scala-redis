@@ -267,6 +267,12 @@ private [redis] trait R extends Reply {
       case _ => Iterator.single(None)
     }.toList)
 
+  def asListTrios[A,B](implicit parseA: Parse[A], parseB: Parse[B], format: Format): Option[List[Option[(A,B,Double)]]] =
+    receive(multiBulkReply).map(_.grouped(3).flatMap{
+      case List(Some(a), Some(b), Some(c)) => Iterator.single(Some((parseA(a), parseB(b), Parse.Implicits.parseDouble(c))))
+      case _ => Iterator.single(None)
+    }.toList)
+
   def asQueuedList: Option[List[Option[String]]] = receive(queuedReplyList).map(_.map(_.map(Parsers.parseString)))
 
   def asExec(handlers: Seq[() => Any]): Option[List[Any]] = receive(execReply(handlers))
