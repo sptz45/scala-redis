@@ -249,7 +249,7 @@ trait SortedSetApiSpec extends FunSpec
 
   protected def zpopmax(): Unit = {
     describe("zpopmax") {
-      it ("should return 'count' number of elements with the lowest score") {
+      it ("should return 'count' number of elements with the highest score") {
         add
 
         r.zpopmax("hackers", 2).get should equal(List(("linus torvalds", 1969), ("yukihiro matsumoto", 1965)))
@@ -269,10 +269,10 @@ trait SortedSetApiSpec extends FunSpec
 
   protected def bzpopmax(): Unit = {
     describe("bzpopmax") {
-      it ("should return 'count' number of elements with the lowest score") {
+      it ("should return 'count' number of elements with the highest score") {
         add
 
-        r.bzpopmax(1, "hackers") should equal(("hackers", "linus torvalds", 1969))
+        r.bzpopmax(1, "hackers").get should equal(("hackers", "linus torvalds", 1969))
       }
     }
   }
