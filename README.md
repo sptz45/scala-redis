@@ -255,6 +255,12 @@ new RedisCluster(nodes, Some(NoOpKeyTag)) with Reconnectable
 ```
 you can observe it's behaviour in `ReconnectableSpec` test.
 
+## Encryption/AUTH
+For use with cloud services such as AWS Elasticache or GC Memory Store, notice a nuance when enabling encryption in transit. This will require both an AUTH password and sslContext when connecting. For example:
+```
+new RedisClient("your-aws-endpoint", 6379, sslContext = Some(SSLContext.getDefault()), secret = "your-auth-secret")
+```
+
 ## License
 
 This software is licensed under the Apache 2 license, quoted below.
