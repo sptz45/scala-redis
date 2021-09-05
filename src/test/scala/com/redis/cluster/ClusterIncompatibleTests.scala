@@ -14,7 +14,7 @@ trait ClusterIncompatibleTests
     with ListApiSpec
     with NodeApiSpec
     with SetApiSpec
-    with SortedSetApiSpec
+    // with SortedSetApiSpec
     with StringApiSpec {
 
   override protected def r: AutoCloseable
@@ -43,8 +43,8 @@ trait ClusterIncompatibleTests
 
   override protected def sunionstore(): Unit = ()
 
-  override protected def zunionT(): Unit = ()
+  // override protected def zunionT(): Unit = ()
 
-  override protected def zinterT(): Unit = ()
+  // override protected def zinterT(): Unit = ()
 
 }

@@ -7,8 +7,8 @@ import org.scalatest.FunSpec
 
 class RedisClusterSpec extends FunSpec
   with IntClusterSpec
-  with ClusterUnimplementedMethods
-  with ClusterIncompatibleTests
+  // with ClusterUnimplementedMethods
+  // with ClusterIncompatibleTests
   with CommonRedisClusterSpec {
 
   override def rProvider() =
