@@ -5,8 +5,8 @@ lazy val redisClient = (project in file(".")).settings(coreSettings : _*)
 lazy val commonSettings: Seq[Setting[_]] = Seq(
   organization := "net.debasishg",
   version := "3.40",
-  scalaVersion := "2.12.10",
-  crossScalaVersions := Seq("2.12.14", "2.11.12", "2.10.7", "2.13.6"),
+  scalaVersion := "2.13.6",
+  crossScalaVersions := Seq("2.12.14", "2.11.12", "2.10.7", "2.12.10"),
 
   scalacOptions in Compile ++= Seq( "-unchecked", "-feature", "-language:postfixOps", "-deprecation" ),
 
