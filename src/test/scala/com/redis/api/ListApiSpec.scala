@@ -3,12 +3,14 @@ package com.redis.api
 import com.redis.RedisClient
 import com.redis.common.IntSpec
 import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.{BeforeAndAfterEach, FunSpec, Matchers}
+import org.scalatest.{BeforeAndAfterEach}
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.Future
 
 
-trait ListApiSpec extends FunSpec with ScalaFutures
+trait ListApiSpec extends AnyFunSpec with ScalaFutures
   with Matchers
   with BeforeAndAfterEach
   with IntSpec {

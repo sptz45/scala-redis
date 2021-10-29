@@ -2,11 +2,12 @@ package com.redis.api
 
 import com.redis.common.IntSpec
 import com.redis.serialization
-import org.scalatest.{FunSpec, Matchers}
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 
 
 
-trait EvalApiSpec extends FunSpec
+trait EvalApiSpec extends AnyFunSpec
                      with Matchers
                      with IntSpec {
 

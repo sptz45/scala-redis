@@ -76,7 +76,7 @@ case class HashRing[T](nodes: List[T], replicas: Int) {
   def isEmpty: Boolean = ring.isEmpty
 
   private def nodeHashFor(node: T, replica: Int): Long = {
-    calculateChecksum((node + ":" + replica).getBytes("UTF-8").toIndexedSeq)
+    calculateChecksum((s"$node:$replica").getBytes("UTF-8").toIndexedSeq)
   }
 
 }

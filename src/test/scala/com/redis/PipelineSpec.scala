@@ -2,10 +2,10 @@ package com.redis
 
 import com.redis.common.IntSpec
 import org.scalatest._
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 
-
-
-class PipelineSpec extends FunSpec
+class PipelineSpec extends AnyFunSpec
                    with Matchers
                    with IntSpec
                    with Inside {
@@ -34,7 +34,7 @@ class PipelineSpec extends FunSpec
 
       inside(res) {
         case List(true, Some("debasish"), None, Some(_)) => succeed
-        case _ => fail
+        case _ => fail()
       }
     }
   }
@@ -85,7 +85,7 @@ class PipelineSpec extends FunSpec
 
     inside(res) {
       case List(true, Some(_), Some("debasish"), Some(_), None) => succeed
-      case _ => fail
+      case _ => fail()
     }
   }
 
@@ -155,6 +155,21 @@ class PipelineSpec extends FunSpec
         p.incrbyfloat("key_incr", float)
       }
       res.get should equal(List(Some(float)))
+    }
+  }
+
+  describe("pipeline with batch submission 1") {
+    it("should execute all commands in batch") {
+      val client = new RedisClient(redisContainerHost, redisContainerPort, batch = RedisClient.BATCH)
+      val res = client.batchedPipeline(
+        List(
+          () => client.lpush("key1", "va1", "va2"),
+          () => client.rpush("key2", "va3", "va4"),
+          () => client.set("key3", "va5"),
+          () => client.incr("key4")
+        )
+      )
+      res.get.size should equal(4)
     }
   }
 }

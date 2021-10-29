@@ -32,7 +32,7 @@ private [redis] object Commands {
       b ++= arg
       b ++= LS
     }
-    b.result
+    b.result()
   }
 }
 
@@ -111,7 +111,7 @@ private [redis] trait Reply {
       Parsers.parseInt(str) match {
         case -1 => None
         case n if n == handlers.size => 
-          Some(handlers.map(_.apply).toList)
+          Some(handlers.map(_.apply()).toList)
         case n => throw new Exception("Protocol error: Expected "+handlers.size+" results, but got "+n)
       }
   }
@@ -286,6 +286,7 @@ private [redis] trait R extends Reply {
   }
 
   def asAny = receive(integerReply orElse singleLineReply orElse bulkReply orElse multiBulkReply)
+  def asAnyMany(count: Int) = (0 to count - 1).map(_ => asAny).toList
 }
 
 trait Protocol extends R

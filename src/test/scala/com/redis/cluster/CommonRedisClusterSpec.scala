@@ -3,10 +3,11 @@ package com.redis.cluster
 import com.redis.RedisClient
 import com.redis.api._
 import com.redis.common.IntClusterSpec
-import org.scalatest.{FunSpec, Matchers}
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 
 // todo: remove, test every API separately
-@deprecated trait CommonRedisClusterSpec extends FunSpec with Matchers with IntClusterSpec {
+@deprecated trait CommonRedisClusterSpec extends AnyFunSpec with Matchers with IntClusterSpec {
 
   override lazy val r = rProvider()
 

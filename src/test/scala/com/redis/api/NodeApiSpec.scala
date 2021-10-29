@@ -1,10 +1,11 @@
 package com.redis.api
 
 import com.redis.common.IntSpec
-import org.scalatest.{FunSpec, Matchers}
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 
 // todo: prepare NodeApi Spec
-trait NodeApiSpec extends FunSpec with Matchers
+trait NodeApiSpec extends AnyFunSpec with Matchers
   with IntSpec {
 
   override protected def r: BaseApi with StringApi with NodeApi with AutoCloseable

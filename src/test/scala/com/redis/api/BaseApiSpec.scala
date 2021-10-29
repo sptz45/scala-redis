@@ -2,12 +2,13 @@ package com.redis.api
 
 import com.redis.common.{IntSpec, StringTypeData}
 import com.redis.serialization.Parse
-import org.scalatest.{FunSpec, Matchers}
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.duration._
 
 
-trait BaseApiSpec extends FunSpec
+trait BaseApiSpec extends AnyFunSpec
                      with Matchers
                      with StringTypeData
                      with IntSpec {

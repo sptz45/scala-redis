@@ -4,12 +4,13 @@ import java.util.concurrent.TimeUnit
 
 import com.redis.api.StringApi.{NX, XX}
 import com.redis.common.IntSpec
-import org.scalatest.{FunSpec, Matchers}
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.duration._
 
 
-trait StringApiSpec extends FunSpec
+trait StringApiSpec extends AnyFunSpec
 with Matchers
 with IntSpec {
 

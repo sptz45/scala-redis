@@ -2,11 +2,13 @@ package com.redis.ds
 
 import com.redis.RedisCommand
 import com.redis.common.RedisDocker
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, FunSpec, Matchers}
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.Future
 
-class BlockingDequeSpec extends FunSpec with RedisDocker
+class BlockingDequeSpec extends AnyFunSpec with RedisDocker
   with Matchers
   with BeforeAndAfterEach
   with BeforeAndAfterAll {
@@ -39,7 +41,7 @@ class BlockingDequeSpec extends FunSpec with RedisDocker
     }
   }
 
-  type BlockingDeque = RedisDeque[String] with RedisCommand
+  type BlockingDeque = MyRedisDeque[String] 
 
   private def beforeAndAfter(t: (BlockingDeque, BlockingDeque) => Unit): Unit = {
     val r1 = createClient()

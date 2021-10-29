@@ -15,6 +15,10 @@ object RedisClient {
   case object MIN extends Aggregate
   case object MAX extends Aggregate
 
+  sealed trait Mode
+  case object SINGLE extends Mode
+  case object BATCH extends Mode
+
   private def extractDatabaseNumber(connectionUri: java.net.URI): Int = {
     Option(connectionUri.getPath).map(path =>
       if (path.isEmpty) 0
@@ -24,11 +28,22 @@ object RedisClient {
   }
 }
 
-trait Redis extends IO with Protocol {
+import RedisClient._
+abstract class Redis(batch: Mode) extends IO with Protocol {
+  var handlers: Vector[(String, () => Any)] = Vector.empty
+  var commandBuffer: StringBuffer           = new StringBuffer
+  val crlf = "\r\n"
+
 
   def send[A](command: String, args: Seq[Any])(result: => A)(implicit format: Format): A = try {
-    write(Commands.multiBulk(command.getBytes("UTF-8") +: (args map (format.apply))))
-    result
+    if (batch == BATCH) {
+      handlers :+= ((command, () => result))
+      commandBuffer.append((List(command) ++ args.toList).mkString(" ") ++ crlf)
+      null.asInstanceOf[A] // hack
+    } else {
+      write(Commands.multiBulk(command.getBytes("UTF-8") +: (args map (format.apply))))
+      result
+    }
   } catch {
     case e: RedisConnectionException =>
       if (disconnect) send(command, args)(result)
@@ -38,15 +53,26 @@ trait Redis extends IO with Protocol {
       else throw e
   }
 
-  def send[A](command: String)(result: => A): A = try {
-    write(Commands.multiBulk(List(command.getBytes("UTF-8"))))
-    result
+  def send[A](command: String, submissionMode: Boolean = false)(result: => A): A = try {
+    if (batch == BATCH) {
+      if (!submissionMode) {
+        handlers :+= ((command, () => result))
+        commandBuffer.append(command ++ crlf)
+        null.asInstanceOf[A]
+      } else {
+        write(command.getBytes("UTF-8"))
+        result
+      }
+    } else {
+      write(Commands.multiBulk(List(command.getBytes("UTF-8"))))
+      result
+    }
   } catch {
     case e: RedisConnectionException =>
-      if (disconnect) send(command)(result)
+      if (disconnect) send(command, submissionMode)(result)
       else throw e
     case e: SocketException =>
-      if (disconnect) send(command)(result)
+      if (disconnect) send(command, submissionMode)(result)
       else throw e
   }
 
@@ -57,7 +83,7 @@ trait Redis extends IO with Protocol {
 
 }
 
-trait RedisCommand extends Redis
+abstract class RedisCommand(batch: Mode) extends Redis(batch)
   with BaseOperations
   with GeoOperations
   with NodeOperations
@@ -74,7 +100,7 @@ trait RedisCommand extends Redis
   val database: Int = 0
   val secret: Option[Any] = None
 
-  override def onConnect: Unit = {
+  override def onConnect(): Unit = {
     secret.foreach {s =>
       auth(s)
     }
@@ -89,13 +115,12 @@ trait RedisCommand extends Redis
   private def authenticate(): Unit = {
     secret.foreach(auth _)
   }
-
 }
 
-
 class RedisClient(override val host: String, override val port: Int,
-    override val database: Int = 0, override val secret: Option[Any] = None, override val timeout : Int = 0, override val sslContext: Option[SSLContext] = None)
-  extends RedisCommand with PubSub {
+    override val database: Int = 0, override val secret: Option[Any] = None, override val timeout : Int = 0, 
+    override val sslContext: Option[SSLContext] = None, val batch: Mode = RedisClient.SINGLE)
+  extends RedisCommand(batch) with PubSub {
 
   def this() = this("localhost", 6379)
   def this(connectionUri: java.net.URI) = this(
@@ -110,18 +135,19 @@ class RedisClient(override val host: String, override val port: Int,
   )
   override def toString: String = host + ":" + String.valueOf(port) + "/" + database
 
+  // with MULTI/EXEC
   def pipeline(f: PipelineClient => Any): Option[List[Any]] = {
-    send("MULTI")(asString) // flush reply stream
+    send("MULTI", false)(asString) // flush reply stream
     try {
       val pipelineClient = new PipelineClient(this)
       try {
         f(pipelineClient)
       } catch {
         case e: Exception =>
-          send("DISCARD")(asString)
+          send("DISCARD", false)(asString)
           throw e
       }
-      send("EXEC")(asExec(pipelineClient.handlers))
+      send("EXEC", false)(asExec(pipelineClient.responseHandlers))
     } catch {
       case e: RedisMultiExecException =>
         None
@@ -135,7 +161,7 @@ class RedisClient(override val host: String, override val port: Int,
   /**
    * Redis pipelining API without the transaction semantics. The implementation has a non-blocking
    * semantics and returns a <tt>List</tt> of <tt>Promise</tt>. The caller may use <tt>Future.firstCompletedOf</tt> to get the
-   * first completed task before all tasks have been completed.
+   * first completed task before all tasks have been completed. However the commands are submitted one by one and NOT in batch.
    * If an exception is raised in executing any of the commands, then the corresponding <tt>Promise</tt> holds
    * the exception. Here's a sample usage:
    * <pre>
@@ -179,20 +205,32 @@ class RedisClient(override val host: String, override val port: Int,
     ps
   }
 
-  class PipelineClient(parent: RedisClient) extends RedisCommand with PubOperations {
+  // batched pipelines : all commands submitted in batch
+  def batchedPipeline(commands: List[() => Any]): Option[List[Any]] = {
+    assert(batch == BATCH)
+    commands.foreach { command =>
+      command()
+    }
+    val r = send(commandBuffer.toString, true)(Some(handlers.map(_._2).map(_()).toList))
+    handlers = Vector.empty
+    commandBuffer.setLength(0)
+    r
+  }
+
+  class PipelineClient(parent: RedisClient) extends RedisCommand(parent.batch) with PubOperations {
     import com.redis.serialization.Parse
 
-    var handlers: Vector[() => Any] = Vector.empty
+    var responseHandlers: Vector[() => Any] = Vector.empty
 
     override def send[A](command: String, args: Seq[Any])(result: => A)(implicit format: Format): A = {
       write(Commands.multiBulk(command.getBytes("UTF-8") +: (args map (format.apply))))
-      handlers :+= (() => result)
+      responseHandlers :+= (() => result)
       receive(singleLineReply).map(Parse.parseDefault)
       null.asInstanceOf[A] // ugh... gotta find a better way
     }
-    override def send[A](command: String)(result: => A): A = {
+    override def send[A](command: String, submissionMode: Boolean = false)(result: => A): A = {
       write(Commands.multiBulk(List(command.getBytes("UTF-8"))))
-      handlers :+= (() => result)
+      responseHandlers :+= (() => result)
       receive(singleLineReply).map(Parse.parseDefault)
       null.asInstanceOf[A]
     }
@@ -207,7 +245,7 @@ class RedisClient(override val host: String, override val port: Int,
     override def connected = parent.connected
     override def connect = parent.connect
     override def disconnect = parent.disconnect
-    override def clearFd = parent.clearFd
+    override def clearFd() = parent.clearFd()
     override def write(data: Array[Byte]) = parent.write(data)
     override def readLine = parent.readLine
     override def readCounted(count: Int) = parent.readCounted(count)

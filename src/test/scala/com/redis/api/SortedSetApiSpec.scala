@@ -3,10 +3,11 @@ package com.redis.api
 import com.redis.RedisClient
 import com.redis.RedisClient.DESC
 import com.redis.common.IntSpec
-import org.scalatest.{FunSpec, Matchers}
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 
 
-trait SortedSetApiSpec extends FunSpec
+trait SortedSetApiSpec extends AnyFunSpec
                         with Matchers
                         with IntSpec {
 

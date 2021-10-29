@@ -3,13 +3,15 @@ package com.redis.cluster
 import com.redis.cluster.KeyTag.NoOpKeyTag
 import com.redis.common.IntClusterSpec
 import com.whisk.docker.DockerContainer
-import org.scalatest.{FunSpec, GivenWhenThen, Matchers, Suite}
+import org.scalatest.{GivenWhenThen, Suite}
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.{Future, Promise}
 import scala.util.Try
 
-class ReconnectableSpec extends FunSpec with GivenWhenThen
+class ReconnectableSpec extends AnyFunSpec with GivenWhenThen
   with ControlledDockerRedisCluster {
 
   override protected lazy val r: RedisCluster with Reconnectable = new RedisCluster(nodes, Some(NoOpKeyTag)) with Reconnectable {

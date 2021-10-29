@@ -6,25 +6,25 @@ trait NodeOperations extends NodeApi {
   self: Redis =>
 
   override def save: Boolean =
-    send("SAVE")(asBoolean)
+    send("SAVE", false)(asBoolean)
 
   override def bgsave: Boolean =
-    send("BGSAVE")(asBoolean)
+    send("BGSAVE", false)(asBoolean)
 
   override def lastsave: Option[Long] =
-    send("LASTSAVE")(asLong)
+    send("LASTSAVE", false)(asLong)
 
   override def shutdown: Boolean =
-    send("SHUTDOWN")(asBoolean)
+    send("SHUTDOWN", false)(asBoolean)
 
   override def bgrewriteaof: Boolean =
-    send("BGREWRITEAOF")(asBoolean)
+    send("BGREWRITEAOF", false)(asBoolean)
 
   override def info: Option[String] =
-    send("INFO")(asBulk)
+    send("INFO", false)(asBulk)
 
   override def monitor: Boolean =
-    send("MONITOR")(asBoolean)
+    send("MONITOR", false)(asBoolean)
 
   override def slaveof(options: Any): Boolean = options match {
     case (h: String, p: Int) =>

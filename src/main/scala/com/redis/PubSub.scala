@@ -77,7 +77,7 @@ trait PubSub extends PubOperations { self: Redis =>
   }
 
   def pUnsubscribe(): Unit = {
-    send("PUNSUBSCRIBE")(())
+    send("PUNSUBSCRIBE", false)(())
   }
 
   def pUnsubscribe(channel: String, channels: String*): Unit = {
@@ -98,7 +98,7 @@ trait PubSub extends PubOperations { self: Redis =>
   }
 
   def unsubscribe(): Unit = {
-    val r = send("UNSUBSCRIBE")(())
+    val r = send("UNSUBSCRIBE", false)(())
     pubSub = false
     r
   }

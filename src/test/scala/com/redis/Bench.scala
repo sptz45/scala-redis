@@ -13,7 +13,7 @@ object Bench {
     import Values._
     clients.withClient {
       client => {
-        (1 to count) foreach (i => client.rpush(key, values.next))
+        (1 to count) foreach (i => client.rpush(key, values.next()))
         assert(client.llen(key) == Some(count))
         (1 to count) foreach (i => client.lpop(key))
         assert(client.llen(key) == Some(0))

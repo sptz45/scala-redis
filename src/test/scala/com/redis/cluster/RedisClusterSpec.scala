@@ -2,10 +2,10 @@ package com.redis.cluster
 
 import com.redis.cluster.KeyTag.RegexKeyTag
 import com.redis.common.IntClusterSpec
-import org.scalatest.FunSpec
+import org.scalatest.funspec.AnyFunSpec
 
 
-class RedisClusterSpec extends FunSpec
+class RedisClusterSpec extends AnyFunSpec
   with IntClusterSpec
   // with ClusterUnimplementedMethods
   // with ClusterIncompatibleTests

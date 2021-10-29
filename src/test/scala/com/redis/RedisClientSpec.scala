@@ -6,12 +6,13 @@ import com.github.dockerjava.core.DefaultDockerClientConfig
 import com.redis.api.ApiSpec
 import com.whisk.docker.DockerContainerManager
 import com.whisk.docker.impl.dockerjava.Docker
-import org.scalatest.{FunSpec, Matchers}
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
-class RedisClientSpec extends FunSpec
+class RedisClientSpec extends AnyFunSpec
   with Matchers with ApiSpec {
 
   override protected lazy val r: RedisClient =

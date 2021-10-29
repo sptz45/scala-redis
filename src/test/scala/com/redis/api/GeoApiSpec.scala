@@ -2,9 +2,10 @@ package com.redis.api
 
 import com.redis.GeoRadiusMember
 import com.redis.common.IntSpec
-import org.scalatest.{FunSpec, Matchers}
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 
-trait GeoApiSpec extends FunSpec
+trait GeoApiSpec extends AnyFunSpec
   with Matchers
   with IntSpec {
 

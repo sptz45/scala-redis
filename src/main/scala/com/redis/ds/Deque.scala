@@ -36,8 +36,13 @@ import com.redis.ListOperations
 import com.redis.serialization.Parse.Implicits._
 import com.redis.serialization._
 
-abstract class RedisDeque[A](val blocking: Boolean = false, val timeoutInSecs: Int = 0)(implicit private val format: Format, private val parse: Parse[A])
+trait RedisDeque[A] 
   extends Deque[A] { self: ListOperations =>
+
+  val blocking: Boolean = false
+  val timeoutInSecs: Int = 0
+  implicit val f: Format
+  implicit val pr: Parse[A]
 
   val key: String
 
@@ -73,18 +78,27 @@ abstract class RedisDeque[A](val blocking: Boolean = false, val timeoutInSecs: I
   }
 }
 
-import com.redis.RedisCommand
+import com.redis._
+
+abstract class MyRedisDeque[A](bloking: Boolean, timoutInSecs: Int)(implicit format: Format, parse: Parse[A]) 
+  extends RedisCommand(RedisClient.SINGLE) with RedisDeque[A] {
+    override val blocking = bloking
+    override val timeoutInSecs: Int = timoutInSecs
+  }
 
 class RedisDequeClient(val h: String, val p: Int, val d: Int = 0, val s: Option[Any] = None, val t : Int =0) {
-  def getDeque[A](k: String, blocking: Boolean = false, timeoutInSecs: Int = 0)(implicit format: Format, parse: Parse[A]) =
-    new RedisDeque(blocking, timeoutInSecs)(format, parse) with RedisCommand {
+  def getDeque[A](k: String, blocking: Boolean = false, timeoutInSecs: Int = 0)(implicit format: Format, parse: Parse[A]) = {
+
+    new MyRedisDeque[A](blocking, timeoutInSecs)(format, parse) {
+      implicit val f = format
+      implicit val pr = parse
       val host = h
       val port = p
       val timeout = t
       val key = k
       override val database = d
       override val secret = s
-
       override def close(): Unit = disconnect
     }
+  }
 }
