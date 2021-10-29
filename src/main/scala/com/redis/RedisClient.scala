@@ -119,7 +119,7 @@ abstract class RedisCommand(batch: Mode) extends Redis(batch)
 
 class RedisClient(override val host: String, override val port: Int,
     override val database: Int = 0, override val secret: Option[Any] = None, override val timeout : Int = 0, 
-    override val sslContext: Option[SSLContext] = None, val batch: Mode = RedisClient.SINGLE)
+    override val sslContext: Option[SSLContext] = None, val batch: RedisClient.Mode = RedisClient.SINGLE)
   extends RedisCommand(batch) with PubSub {
 
   def this() = this("localhost", 6379)
