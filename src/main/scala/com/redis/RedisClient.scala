@@ -135,7 +135,13 @@ class RedisClient(override val host: String, override val port: Int,
   )
   override def toString: String = host + ":" + String.valueOf(port) + "/" + database
 
-  // with MULTI/EXEC
+  /**
+   * Execute operations in the context of a MULTI command.
+   * If you want to send the commands in batch mode, use the `batchedPipeline` method.
+   *
+   * @throws NullPointerException if code attempts to access the results of any Redis command within the block.
+   * @see https://redis.io/commands/multi
+   */
   def pipeline(f: PipelineClient => Any): Option[List[Any]] = {
     send("MULTI", false)(asString) // flush reply stream
     try {
@@ -186,6 +192,8 @@ class RedisClient(override val host: String, override val port: Int,
    * </pre>
    *
    * Or the client may wish to track and get the promises as soon as the underlying <tt>Future</tt> is completed.
+   *
+   * @throws NullPointerException if code attempts to access the results of any Redis command within the block.
    */
   def pipelineNoMulti(commands: Seq[() => Any]) = {
     val ps = List.fill(commands.size)(Promise[Any]())
@@ -206,9 +214,15 @@ class RedisClient(override val host: String, override val port: Int,
     ps
   }
 
-  // batched pipelines : all commands submitted in batch
+  /**
+   * Executes all the provided commands a single communication, returning a list with all the results.
+   *
+   * @throws IllegalStateException if this client was not intialized for batch (pipelined) messaging
+   * @see https://redis.io/topics/pipelining
+   */
   def batchedPipeline(commands: List[() => Any]): Option[List[Any]] = {
-    assert(batch == BATCH)
+    if (batch != BATCH) throw new IllegalStateException("Cannot use batch operations for non-batch mode client")
+
     commands.foreach { command =>
       command()
     }
@@ -218,6 +232,11 @@ class RedisClient(override val host: String, override val port: Int,
     r
   }
 
+  /**
+   * Redis client which sends all messages in the context of a MULTI command, providing transaction semantics.
+   *
+   * @see https://redis.io/commands/multi
+   */
   class PipelineClient(parent: RedisClient) extends RedisCommand(parent.batch) with PubOperations {
     import com.redis.serialization.Parse
 
