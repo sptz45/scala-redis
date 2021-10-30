@@ -1,11 +1,12 @@
 package com.redis
 
 import com.redis.common.RedisDocker
-import org.scalatest.{FunSpec, Matchers}
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent.Future
 
-class WatchSpec extends FunSpec
+class WatchSpec extends AnyFunSpec
                      with Matchers
                      with RedisDocker {
 
@@ -33,7 +34,7 @@ class WatchSpec extends FunSpec
 
       p2.futureValue should equal(true)
       p1.futureValue should equal(None)
-      clients.close
+      clients.close()
     }
   }
 }

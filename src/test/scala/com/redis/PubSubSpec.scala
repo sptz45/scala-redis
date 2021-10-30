@@ -1,9 +1,10 @@
 package com.redis
 
 import com.redis.common.RedisDocker
-import org.scalatest.{FunSpec, Matchers}
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 
-class PubSubSpec extends FunSpec
+class PubSubSpec extends AnyFunSpec
                  with Matchers
                  with RedisDocker {
 
@@ -37,7 +38,7 @@ class PubSubSpec extends FunSpec
               // exit will unsubscribe from all channels and stop subscription service
               case "exit" =>
                 println("unsubscribe all ..")
-                r.unsubscribe
+                r.unsubscribe()
 
               // message "+x" will subscribe to channel x
               case x if x startsWith "+" =>

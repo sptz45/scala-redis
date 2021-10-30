@@ -1,7 +1,8 @@
 package com.redis.common
 
 import com.redis.api.{BaseApi, StringApi}
-import org.scalatest.{GivenWhenThen, Informing, Matchers, Suite}
+import org.scalatest.{GivenWhenThen, Informing, Suite}
+import org.scalatest.matchers.should.Matchers
 
 trait StringTypeData extends IntSpec with Matchers with GivenWhenThen {
   that: Suite with Informing =>

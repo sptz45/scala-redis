@@ -72,7 +72,7 @@ class ReconnectableSpec extends AnyFunSpec with GivenWhenThen
   }
 
   def waitForCluster(expected: List[ClusterNode] => Boolean, remaining: Int = 10,
-                     p: Promise[Boolean] = Promise[Boolean]): Future[Boolean] =
+                     p: Promise[Boolean] = Promise[Boolean]()): Future[Boolean] =
     if (expected(r.listServers)) {
       p.success(true).future
     } else if (remaining > 0) {

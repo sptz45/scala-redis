@@ -20,12 +20,12 @@ trait IntClusterSpec extends BeforeAndAfterEach with RedisDockerCluster {
     format(key)
   }
 
-  override def afterAll: Unit = {
+  override def afterAll(): Unit = {
     r.close()
     super.afterAll()
   }
 
-  override def afterEach: Unit = {
+  override def afterEach(): Unit = {
     r.flushall
     super.afterEach()
   }

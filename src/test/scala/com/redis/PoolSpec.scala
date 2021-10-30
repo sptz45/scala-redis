@@ -1,12 +1,14 @@
 package com.redis
 
 import com.redis.common.RedisDocker
-import org.scalatest.{BeforeAndAfterEach, FunSpec, Matchers}
+import org.scalatest.BeforeAndAfterEach
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 
 import scala.concurrent._
 import scala.concurrent.duration._
 
-class PoolSpec extends FunSpec
+class PoolSpec extends AnyFunSpec
                with Matchers
                with BeforeAndAfterEach
                with RedisDocker {
@@ -27,7 +29,7 @@ class PoolSpec extends FunSpec
 
   override def afterAll(): Unit = {
     clients.withClient{ client => client.disconnect }
-    clients.close
+    clients.close()
     super.afterAll()
   }
 

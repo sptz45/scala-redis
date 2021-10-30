@@ -4,9 +4,10 @@ import java.security.cert.X509Certificate
 import org.apache.http.ssl.{SSLContexts, TrustStrategy}
 
 import com.redis.common.RedisDockerSSL
-import org.scalatest.{FunSpec, Matchers}
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 
-class SSLSpec extends FunSpec with Matchers with RedisDockerSSL {
+class SSLSpec extends AnyFunSpec with Matchers with RedisDockerSSL {
 
   // Our certificate on the test server is self-signed, which will be
   // rejected by the default SSLContext. This SSLContext is therefore
