@@ -47,14 +47,14 @@ trait BaseOperations extends BaseApi {
     send("KEYS", List(pattern))(asList)
 
   override def time[A](implicit format: Format, parse: Parse[A]): Option[List[Option[A]]] =
-    send("TIME", false)(asList)
+    send("TIME")(asList)
 
   @deprecated("use randomkey", "2.8")
   def randkey[A](implicit parse: Parse[A]): Option[A] =
-    send("RANDOMKEY", false)(asBulk)
+    send("RANDOMKEY")(asBulk)
 
   override def randomkey[A](implicit parse: Parse[A]): Option[A] =
-    send("RANDOMKEY", false)(asBulk)
+    send("RANDOMKEY")(asBulk)
 
   override def rename(oldkey: Any, newkey: Any)(implicit format: Format): Boolean =
     send("RENAME", List(oldkey, newkey))(asBoolean)
@@ -63,7 +63,7 @@ trait BaseOperations extends BaseApi {
     send("RENAMENX", List(oldkey, newkey))(asBoolean)
 
   override def dbsize: Option[Long] =
-    send("DBSIZE", false)(asLong)
+    send("DBSIZE")(asLong)
 
   override def exists(key: Any)(implicit format: Format): Boolean =
     send("EXISTS", List(key))(asBoolean)
@@ -104,16 +104,16 @@ trait BaseOperations extends BaseApi {
     })
 
   override def flushdb: Boolean =
-    send("FLUSHDB", false)(asBoolean)
+    send("FLUSHDB")(asBoolean)
 
   override def flushall: Boolean =
-    send("FLUSHALL", false)(asBoolean)
+    send("FLUSHALL")(asBoolean)
 
   override def move(key: Any, db: Int)(implicit format: Format): Boolean =
     send("MOVE", List(key, db))(asBoolean)
 
   override def quit: Boolean =
-    send("QUIT", false)(disconnect)
+    send("QUIT")(disconnect)
 
   override def auth(secret: Any)(implicit format: Format): Boolean =
     send("AUTH", List(secret))(asBoolean)
@@ -125,13 +125,13 @@ trait BaseOperations extends BaseApi {
     send("SCAN", cursor :: ((x: List[Any]) => if (pattern == "*") x else "match" :: pattern :: x) (if (count == 10) Nil else List("count", count)))(asPair)
 
   override def ping: Option[String] =
-    send("PING", false)(asString)
+    send("PING")(asString)
 
   override def watch(key: Any, keys: Any*)(implicit format: Format): Boolean =
     send("WATCH", key :: keys.toList)(asBoolean)
 
   override def unwatch(): Boolean =
-    send("UNWATCH", false)(asBoolean)
+    send("UNWATCH")(asBoolean)
 
   override def getConfig(key: Any = "*")(implicit format: Format): Option[Map[String, Option[String]]] =
     send("CONFIG", List("GET", key))(asList).map { ls =>

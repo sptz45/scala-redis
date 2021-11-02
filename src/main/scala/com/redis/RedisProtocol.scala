@@ -34,6 +34,18 @@ private [redis] object Commands {
     }
     b.result()
   }
+
+  def multiMultiBulk(commands: Seq[Seq[Array[Byte]]]): Array[Byte] = {
+    val no = commands.size
+    val b = new scala.collection.mutable.ArrayBuilder.ofByte
+    // b ++= "*%d".format(no).getBytes
+    // b ++= LS
+    commands.foreach { command =>
+      b ++= multiBulk(command)
+      b ++= LS
+    }
+    b.result()
+  }
 }
 
 import Commands._

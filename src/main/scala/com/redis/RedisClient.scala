@@ -26,19 +26,19 @@ object RedisClient {
     )
       .getOrElse(0)
   }
+
+  case class CommandToSend(command: String, args: Seq[Array[Byte]])
 }
 
 import RedisClient._
 abstract class Redis(batch: Mode) extends IO with Protocol {
   var handlers: Vector[(String, () => Any)] = Vector.empty
-  var commandBuffer: StringBuffer           = new StringBuffer
-  val crlf = "\r\n"
-
+  val commandBuffer = collection.mutable.ListBuffer.empty[CommandToSend]
 
   def send[A](command: String, args: Seq[Any])(result: => A)(implicit format: Format): A = try {
     if (batch == BATCH) {
       handlers :+= ((command, () => result))
-      commandBuffer.append((List(command) ++ args.toList).mkString(" ") ++ crlf)
+      commandBuffer += CommandToSend(command, args.map(format.apply))
       null.asInstanceOf[A] // hack
     } else {
       write(Commands.multiBulk(command.getBytes("UTF-8") +: (args map (format.apply))))
@@ -53,26 +53,36 @@ abstract class Redis(batch: Mode) extends IO with Protocol {
       else throw e
   }
 
-  def send[A](command: String, submissionMode: Boolean = false)(result: => A): A = try {
+  def send[A](command: String)(result: => A): A = try {
     if (batch == BATCH) {
-      if (!submissionMode) {
-        handlers :+= ((command, () => result))
-        commandBuffer.append(command ++ crlf)
-        null.asInstanceOf[A]
-      } else {
-        write(command.getBytes("UTF-8"))
-        result
-      }
+      handlers :+= ((command, () => result))
+      commandBuffer += CommandToSend(command, Seq.empty[Array[Byte]])
+      null.asInstanceOf[A]
     } else {
       write(Commands.multiBulk(List(command.getBytes("UTF-8"))))
       result
     }
   } catch {
     case e: RedisConnectionException =>
-      if (disconnect) send(command, submissionMode)(result)
+      if (disconnect) send(command)(result)
       else throw e
     case e: SocketException =>
-      if (disconnect) send(command, submissionMode)(result)
+      if (disconnect) send(command)(result)
+      else throw e
+  }
+
+  def send[A](commands: List[CommandToSend])(result: => A): A = try {
+    val cs = commands.map { command =>
+      command.command.getBytes("UTF-8") +: command.args
+    }
+    write(Commands.multiMultiBulk(cs))
+    result
+  } catch {
+    case e: RedisConnectionException =>
+      if (disconnect) send(commands)(result)
+      else throw e
+    case e: SocketException =>
+      if (disconnect) send(commands)(result)
       else throw e
   }
 
@@ -143,17 +153,17 @@ class RedisClient(override val host: String, override val port: Int,
    * @see https://redis.io/commands/multi
    */
   def pipeline(f: PipelineClient => Any): Option[List[Any]] = {
-    send("MULTI", false)(asString) // flush reply stream
+    send("MULTI")(asString) // flush reply stream
     try {
       val pipelineClient = new PipelineClient(this)
       try {
         f(pipelineClient)
       } catch {
         case e: Exception =>
-          send("DISCARD", false)(asString)
+          send("DISCARD")(asString)
           throw e
       }
-      send("EXEC", false)(asExec(pipelineClient.responseHandlers))
+      send("EXEC")(asExec(pipelineClient.responseHandlers))
     } catch {
       case e: RedisMultiExecException =>
         None
@@ -226,9 +236,9 @@ class RedisClient(override val host: String, override val port: Int,
     commands.foreach { command =>
       command()
     }
-    val r = send(commandBuffer.toString, true)(Some(handlers.map(_._2).map(_()).toList))
+    val r = send(commandBuffer.toList)(Some(handlers.map(_._2).map(_()).toList))
     handlers = Vector.empty
-    commandBuffer.setLength(0)
+    commandBuffer.clear()
     r
   }
 
@@ -248,7 +258,7 @@ class RedisClient(override val host: String, override val port: Int,
       receive(singleLineReply).map(Parse.parseDefault)
       null.asInstanceOf[A] // ugh... gotta find a better way
     }
-    override def send[A](command: String, submissionMode: Boolean = false)(result: => A): A = {
+    override def send[A](command: String)(result: => A): A = {
       write(Commands.multiBulk(List(command.getBytes("UTF-8"))))
       responseHandlers :+= (() => result)
       receive(singleLineReply).map(Parse.parseDefault)
