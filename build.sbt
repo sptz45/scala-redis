@@ -8,7 +8,7 @@ lazy val commonSettings: Seq[Setting[_]] = Seq(
   scalaVersion := "2.13.7",
   crossScalaVersions := Seq("2.13.7", "2.12.14", "2.11.12", "2.10.7"),
 
-  scalacOptions in Compile ++= Seq( "-unchecked", "-feature", "-language:postfixOps", "-deprecation" ),
+  Compile / scalacOptions ++= Seq( "-unchecked", "-feature", "-language:postfixOps", "-deprecation" ),
 
   resolvers ++= Seq(
     ("typesafe repo" at "http://repo.typesafe.com/typesafe/releases/").withAllowInsecureProtocol(true)
@@ -43,7 +43,7 @@ lazy val coreSettings = commonSettings ++ Seq(
   }.value,
   credentials += Credentials(Path.userHome / ".sbt" / "sonatype.credentials"),
   publishMavenStyle := true,
-  publishArtifact in Test := false,
+  Test / publishArtifact := false,
   pomIncludeRepository := { repo => false },
   pomExtra := (
     <url>https://github.com/debasishg/scala-redis</url>
