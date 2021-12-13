@@ -32,12 +32,12 @@ trait Deque[A] {
   def size: Long
 }
 
-import com.redis.ListOperations
+import com.redis.{ListOperations, Redis}
 import com.redis.serialization.Parse.Implicits._
 import com.redis.serialization._
 
 trait RedisDeque[A] 
-  extends Deque[A] { self: ListOperations =>
+  extends Deque[A] { self: ListOperations with Redis =>
 
   val blocking: Boolean = false
   val timeoutInSecs: Int = 0

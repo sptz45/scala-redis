@@ -11,7 +11,7 @@ class PatternsSpec extends AnyFunSpec
                with BeforeAndAfterEach
                with RedisDocker {
 
-  implicit lazy val clients = new RedisClientPool(redisContainerHost, redisContainerPort)
+  implicit lazy val clients: RedisClientPool = new RedisClientPool(redisContainerHost, redisContainerPort)
 
   override def afterEach() = clients.withClient{
     client => client.flushdb

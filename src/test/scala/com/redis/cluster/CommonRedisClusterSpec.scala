@@ -9,11 +9,13 @@ import org.scalatest.matchers.should.Matchers
 // todo: remove, test every API separately
 @deprecated trait CommonRedisClusterSpec extends AnyFunSpec with Matchers with IntClusterSpec {
 
-  override lazy val r = rProvider()
-
-  def rProvider(): AutoCloseable with RedisClusterOps with WithHashRing[IdentifiableRedisClientPool]
+  type Provider = AutoCloseable with RedisClusterOps with WithHashRing[IdentifiableRedisClientPool]
     with BaseApi with HashApi with ListApi with NodeApi with SetApi with SortedSetApi with StringApi
     with EvalApi
+
+  override lazy val r: Provider = rProvider()
+
+  def rProvider(): Provider
 
   describe("cluster operations") {
     shouldSet()

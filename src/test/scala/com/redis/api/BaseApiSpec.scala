@@ -262,9 +262,11 @@ trait BaseApiSpec extends AnyFunSpec
       r.lrange("skey", 0, 10).get should equal(List(Some("1"), Some("3"), Some("10"), Some("30")))
 
       // Long serialization : return Long
-      implicit val parseLong = Parse[Long](new String(_).toLong)
-      r.sortNStore[Long]("alltest", storeAt = "skey").getOrElse(-1) should equal(4)
-      r.lrange("skey", 0, 10).get should equal(List(Some(1), Some(3), Some(10), Some(30)))
+      {
+        implicit val parseLong: Parse[Long] = Parse[Long](new String(_).toLong)
+        r.sortNStore[Long]("alltest", storeAt = "skey").getOrElse(-1) should equal(4)
+        r.lrange("skey", 0, 10).get should equal(List(Some(1), Some(3), Some(10), Some(30)))
+      }
     }
   }
   }
