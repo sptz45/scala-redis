@@ -6,7 +6,7 @@ lazy val commonSettings: Seq[Setting[_]] = Seq(
   organization := "net.debasishg",
   version := "3.42",
   scalaVersion := "2.13.7",
-  crossScalaVersions := Seq("2.13.7", "2.12.14", "2.11.12", "2.10.7", "3.0.2"),
+  crossScalaVersions := Seq("2.13.7", "2.12.14", "2.11.12", "2.10.7"),
 
   Compile / scalacOptions ++= Seq( "-unchecked", "-feature", "-language:postfixOps", "-deprecation" ),
 
@@ -15,10 +15,10 @@ lazy val commonSettings: Seq[Setting[_]] = Seq(
   )
 )
 
-def dockerTestKit(version: String, dockerJavaV: Option[String] = None): Seq[ModuleID] = {
+def dockerTestKit(version: String): Seq[ModuleID] = {
   Seq(
     "com.whisk" %% "docker-testkit-scalatest" % version % Test,
-    "com.whisk" %% "docker-testkit-impl-docker-java" % dockerJavaV.getOrElse(version) % Test
+    "com.whisk" %% "docker-testkit-impl-docker-java" % version % Test
   ) :+
     // https://github.com/eclipse-ee4j/jaxb-ri/issues/1222
     "javax.xml.bind" % "jaxb-api" % "2.3.1" % Test
@@ -35,7 +35,7 @@ lazy val coreSettings = commonSettings ++ Seq(
   ) ++
     (scalaBinaryVersion.value match {
       case "2.10" => dockerTestKit("0.9.8")
-      case _ => dockerTestKit("0.11.0", Some("0.11.0-beta1"))
+      case _ => dockerTestKit("0.9.9")
     })
   ,
 
