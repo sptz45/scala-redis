@@ -2,13 +2,12 @@ package com.redis.cluster
 
 import com.redis.cluster.KeyTag.NoOpKeyTag
 import com.redis.common.IntClusterSpec
-import com.whisk.docker.DockerContainer
+import com.whisk.docker.testkit.{BaseContainer, Container}
 import org.scalatest.{GivenWhenThen, Suite}
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
 import org.slf4j.LoggerFactory
-
-import scala.concurrent.{Future, Promise}
+import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.Try
 
 class ReconnectableSpec extends AnyFunSpec with GivenWhenThen
@@ -82,35 +81,35 @@ class ReconnectableSpec extends AnyFunSpec with GivenWhenThen
       p.failure(new Throwable("Did not reach expected state")).future
     }
 
-  override def afterAll(): Unit = {
+  override def beforeStop(): Unit = {
+    Try(stopContainer0())
     r.close()
-    Try(dockerExecutor.remove(container0Name).futureValue)
-    containerNames.foreach(i => Try(dockerExecutor.remove(i).futureValue))
-    super.afterAll()
   }
 }
 
 trait ControlledDockerRedisCluster extends IntClusterSpec with Matchers {
   that: Suite =>
 
+  implicit lazy val executionContext: ExecutionContext = scala.concurrent.ExecutionContext.global
+
   private val logger = LoggerFactory.getLogger(getClass)
 
-  protected lazy val container0: DockerContainer = runningContainers.head
-  protected lazy val container0Name: String = container0.name.get
-  protected lazy val container0Ports: Map[Int, Int] = container0.getPorts().futureValue
-  protected lazy val newContainer0: DockerContainer = createContainer(Some(container0Name), container0Ports)
+  protected lazy val container0: BaseContainer = managedContainers.containers.head
+  protected lazy val container0Name: String = container0.spec.name.orNull
+  protected lazy val container0Ports: Map[Int, Int] = container0.mappedPorts()
+  protected lazy val newContainer0: Container = new Container(createContainer(Some(container0Name), container0Ports))
 
-  protected lazy val containerNames: List[String] = runningContainers.flatMap(_.name)
+  protected lazy val containerNames: Seq[String] = managedContainers.containers.flatMap(_.spec.name)
 
   protected def startContainer0(): Unit = {
     logger.info(s"Manually starting node [$container0Name], [$container0Ports]")
-    val new0Id = dockerExecutor.createContainer(newContainer0).futureValue
-    dockerExecutor.startContainer(new0Id).futureValue
+    val new0Id = dockerExecutor.createContainer(newContainer0.spec).futureValue
+    dockerExecutor.startContainer(new0Id.id()).futureValue
   }
 
   protected def stopContainer0(): Unit = {
     logger.info(s"Manually removing node [$container0Name], [$container0Ports]")
-    dockerExecutor.remove(container0Name).futureValue
+    dockerExecutor.remove(container0Name, force = true, removeVolumes = true).futureValue
   }
 
 }

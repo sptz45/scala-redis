@@ -178,7 +178,7 @@ class PipelineSpec extends AnyFunSpec
       val client = new RedisClient(redisContainerHost, redisContainerPort, batch = RedisClient.BATCH)
       import com.redis.serialization._
       import Parse.Implicits.parseInt
-      implicit val parseString = Parse[String](new String(_).toInt.toBinaryString)
+      implicit val parseString: Parse[String] = Parse[String](new String(_).toInt.toBinaryString)
       val res = client.batchedPipeline(
         List(
           () => client.hmset("hash", Map("field1" -> "1", "field2" -> 2)),

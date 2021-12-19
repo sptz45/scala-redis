@@ -11,7 +11,7 @@ class PubSubSpec extends AnyFunSpec
   lazy val r = new RedisClient(redisContainerHost, redisContainerPort)
   lazy val t = new RedisClient(redisContainerHost, redisContainerPort)
 
-  override def afterAll(): Unit = {
+  override def beforeStop(): Unit = {
      r.close()
      t.close()
   }

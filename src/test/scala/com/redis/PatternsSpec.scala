@@ -17,7 +17,7 @@ class PatternsSpec extends AnyFunSpec
     client => client.flushdb
   }
 
-  override def afterAll() = {
+  override def beforeStop() = {
     clients.withClient{ client =>
       client.flushall
       client.disconnect

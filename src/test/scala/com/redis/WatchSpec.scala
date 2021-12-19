@@ -3,7 +3,6 @@ package com.redis
 import com.redis.common.RedisDocker
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
-
 import scala.concurrent.Future
 
 class WatchSpec extends AnyFunSpec
@@ -22,7 +21,7 @@ class WatchSpec extends AnyFunSpec
             p.get("key")
             p.get("key1")
           }
-      }
+        }
       }
 
       val p2: Future[Boolean] = Future {

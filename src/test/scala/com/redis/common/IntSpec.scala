@@ -8,10 +8,7 @@ trait IntSpec extends BeforeAndAfterEach with RedisDocker {
 
   protected def r: BaseApi with AutoCloseable
 
-  override def afterAll(): Unit = {
-    r.close()
-    super.afterAll()
-  }
+  override def beforeStop(): Unit = r.close()
 
   override def afterEach(): Unit = {
     r.flushall

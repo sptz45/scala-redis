@@ -121,14 +121,14 @@ import org.scalatest.matchers.should.Matchers
 
       //simulate the same value is duplicated to slave
       //for test, don't set to master, just to make sure the expected value is loaded from slave
-      val redisClient = new RedisClient(redisContainerHost, redisContainerPort(dockerContainers.head))
+      val redisClient = new RedisClient(redisContainerHost, redisContainerPort(managedContainers.containers.head))
       redisClient.set("testkey1", "testvalue1")
 
       //replaced master with slave on the same node
-      r.replaceServer(ClusterNode(nodename, redisContainerHost, redisContainerPort(dockerContainers.head)))
-      r.nodeForKey("testkey1").port should equal(redisContainerPort(dockerContainers.head))
+      r.replaceServer(ClusterNode(nodename, redisContainerHost, redisContainerPort(managedContainers.containers.head)))
+      r.nodeForKey("testkey1").port should equal(redisContainerPort(managedContainers.containers.head))
 
-      r.hr.cluster.find(_.node.nodename.equals(nodename)).get.port should equal(redisContainerPort(dockerContainers.head))
+      r.hr.cluster.find(_.node.nodename.equals(nodename)).get.port should equal(redisContainerPort(managedContainers.containers.head))
       r.get("testkey1") should equal(Some("testvalue1"))
 
       //switch back to master. the old value is loaded

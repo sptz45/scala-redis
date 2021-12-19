@@ -4,7 +4,6 @@ import com.redis.common.RedisDocker
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
-
 import scala.concurrent._
 import scala.concurrent.duration._
 
@@ -27,10 +26,9 @@ class PoolSpec extends AnyFunSpec
     super.afterEach()
   }
 
-  override def afterAll(): Unit = {
+  override def beforeStop(): Unit = {
     clients.withClient{ client => client.disconnect }
     clients.close()
-    super.afterAll()
   }
 
   def lp(msgs: List[String]) = {

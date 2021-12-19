@@ -6,7 +6,7 @@ lazy val commonSettings: Seq[Setting[_]] = Seq(
   organization := "net.debasishg",
   version := "3.42",
   scalaVersion := "2.13.7",
-  crossScalaVersions := Seq("2.13.7", "2.12.14", "2.11.12", "2.10.7"),
+  crossScalaVersions := Seq("2.13.7", "2.12.14", "2.11.12", "3.0.2"),
 
   Compile / scalacOptions ++= Seq( "-unchecked", "-feature", "-language:postfixOps", "-deprecation" ),
 
@@ -15,29 +15,18 @@ lazy val commonSettings: Seq[Setting[_]] = Seq(
   )
 )
 
-def dockerTestKit(version: String): Seq[ModuleID] = {
-  Seq(
-    "com.whisk" %% "docker-testkit-scalatest" % version % Test,
-    "com.whisk" %% "docker-testkit-impl-docker-java" % version % Test
-  ) :+
-    // https://github.com/eclipse-ee4j/jaxb-ri/issues/1222
-    "javax.xml.bind" % "jaxb-api" % "2.3.1" % Test
-}
-
 lazy val coreSettings = commonSettings ++ Seq(
   name := "RedisClient",
   libraryDependencies ++= Seq(
-    "org.apache.commons"      %  "commons-pool2"           % "2.8.0",
-    "org.slf4j"               %  "slf4j-api"               % "1.7.32",
-    "org.slf4j"               %  "slf4j-log4j12"           % "1.7.32"      % "provided",
-    "log4j"                   %  "log4j"                   % "1.2.17"      % "provided",
-    "org.scalatest"           %% "scalatest"               % "3.2.9"       % Test
-  ) ++
-    (scalaBinaryVersion.value match {
-      case "2.10" => dockerTestKit("0.9.8")
-      case _ => dockerTestKit("0.9.9")
-    })
-  ,
+    "org.apache.commons"      %  "commons-pool2"                   % "2.8.0",
+    "org.slf4j"               %  "slf4j-api"                       % "1.7.32",
+    "org.slf4j"               %  "slf4j-log4j12"                   % "1.7.32"     % "provided",
+    "log4j"                   %  "log4j"                           % "1.2.17"     % "provided",
+    "org.scalatest"           %% "scalatest"                       % "3.2.9"      % Test,
+    "com.whisk"               %% "docker-testkit-scalatest"        % "0.11.0"     % Test,
+    // https://github.com/eclipse-ee4j/jaxb-ri/issues/1222
+    "javax.xml.bind" % "jaxb-api" % "2.3.1" % Test
+  ),
 
   publishTo := version { (v: String) =>
     val nexus = "https://oss.sonatype.org/"

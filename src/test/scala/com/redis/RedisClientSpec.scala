@@ -2,10 +2,7 @@ package com.redis
 
 import java.net.{ServerSocket, URI}
 
-import com.github.dockerjava.core.DefaultDockerClientConfig
 import com.redis.api.ApiSpec
-import com.whisk.docker.DockerContainerManager
-import com.whisk.docker.impl.dockerjava.Docker
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
 

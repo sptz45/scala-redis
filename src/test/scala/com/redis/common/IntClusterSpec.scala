@@ -12,18 +12,15 @@ trait IntClusterSpec extends BeforeAndAfterEach with RedisDockerCluster {
   protected val nodeNamePrefix = "node"
 
   protected lazy val nodes: List[ClusterNode] =
-    runningContainers.zipWithIndex.map { case (c, i) =>
+    managedContainers.containers.zipWithIndex.map { case (c, i) =>
       ClusterNode(s"$nodeNamePrefix$i", redisContainerHost, redisContainerPort(c))
-    }
+    }.toList
 
   def formattedKey(key: Any)(implicit format: Format): Array[Byte] = {
     format(key)
   }
 
-  override def afterAll(): Unit = {
-    r.close()
-    super.afterAll()
-  }
+  override def beforeStop(): Unit = r.close()
 
   override def afterEach(): Unit = {
     r.flushall
