@@ -1,11 +1,13 @@
 package com.redis
 
-import java.net.{ServerSocket, URI}
+import com.redis.RedisClientSpec.DummyClientWithFaultyConnection
 
+import java.net.{ServerSocket, URI}
 import com.redis.api.ApiSpec
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
 
+import java.io.OutputStream
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
@@ -71,7 +73,7 @@ class RedisClientSpec extends AnyFunSpec
     r.close()
   }}
 
-//   describe("test reconnect") {
+   describe("test reconnect") {
 //     it("should re-init after server restart") {
 //       val docker = new Docker(DefaultDockerClientConfig.createDefaultConfigBuilder().build()).client
 // 
@@ -104,5 +106,46 @@ class RedisClientSpec extends AnyFunSpec
 // 
 //       got shouldBe Some(value)
 //     }
-//   }
+
+     it("should not trigger a StackOverflowError in send(..) if Redis is down") {
+       val maxFailures = 10000 // Should be enough to trigger StackOverflowError
+       val r = new DummyClientWithFaultyConnection(maxFailures)
+       r.send("PING") {
+         /* PONG */
+       }
+       r.connected shouldBe true
+     }
+
+   }
+}
+
+object RedisClientSpec {
+
+  private class DummyClientWithFaultyConnection(maxFailures: Int) extends Redis(RedisClient.SINGLE) {
+
+    private var _connected = false
+    private var _failures = 0
+
+    override val host: String = null
+    override val port: Int = 0
+    override val timeout: Int = 0
+
+    override def onConnect(): Unit = ()
+
+    override def connected: Boolean = _connected
+
+    override def disconnect: Boolean = true
+
+    override def write_to_socket(data: Array[Byte])(op: OutputStream => Unit): Unit = ()
+
+    override def connect: Boolean =
+      if (_failures <= maxFailures) {
+        _failures += 1
+        throw RedisConnectionException("fail in order to trigger the reconnect")
+      } else {
+        _connected = true
+        true
+      }
+  }
+
 }

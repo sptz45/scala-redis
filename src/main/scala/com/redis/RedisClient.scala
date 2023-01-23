@@ -2,8 +2,9 @@ package com.redis
 
 import java.net.SocketException
 import javax.net.ssl.SSLContext
-
 import com.redis.serialization.Format
+
+import scala.annotation.tailrec
 
 object RedisClient {
   sealed trait SortOrder
@@ -35,7 +36,8 @@ abstract class Redis(batch: Mode) extends IO with Protocol {
   var handlers: Vector[(String, () => Any)] = Vector.empty
   val commandBuffer = collection.mutable.ListBuffer.empty[CommandToSend]
 
-  def send[A](command: String, args: Seq[Any])(result: => A)(implicit format: Format): A = try {
+  @tailrec
+  private def doSend[A](command: String, args: Seq[Any])(result: => A)(implicit format: Format): A = try {
     if (batch == BATCH) {
       handlers :+= ((command, () => result))
       commandBuffer += CommandToSend(command, args.map(format.apply))
@@ -46,14 +48,18 @@ abstract class Redis(batch: Mode) extends IO with Protocol {
     }
   } catch {
     case e: RedisConnectionException =>
-      if (disconnect) send(command, args)(result)
+      if (disconnect) doSend(command, args)(result)
       else throw e
     case e: SocketException =>
-      if (disconnect) send(command, args)(result)
+      if (disconnect) doSend(command, args)(result)
       else throw e
   }
 
-  def send[A](command: String)(result: => A): A = try {
+  def send[A](command: String, args: Seq[Any])(result: => A)(implicit format: Format): A =
+    doSend(command, args)(result)
+
+  @tailrec
+  private def doSend[A](command: String)(result: => A): A = try {
     if (batch == BATCH) {
       handlers :+= ((command, () => result))
       commandBuffer += CommandToSend(command, Seq.empty[Array[Byte]])
@@ -64,14 +70,17 @@ abstract class Redis(batch: Mode) extends IO with Protocol {
     }
   } catch {
     case e: RedisConnectionException =>
-      if (disconnect) send(command)(result)
+      if (disconnect) doSend(command)(result)
       else throw e
     case e: SocketException =>
-      if (disconnect) send(command)(result)
+      if (disconnect) doSend(command)(result)
       else throw e
   }
 
-  def send[A](commands: List[CommandToSend])(result: => A): A = try {
+  def send[A](command: String)(result: => A): A = doSend(command)(result)
+
+  @tailrec
+  private def doSend[A](commands: List[CommandToSend])(result: => A): A = try {
     val cs = commands.map { command =>
       command.command.getBytes("UTF-8") +: command.args
     }
@@ -79,12 +88,14 @@ abstract class Redis(batch: Mode) extends IO with Protocol {
     result
   } catch {
     case e: RedisConnectionException =>
-      if (disconnect) send(commands)(result)
+      if (disconnect) doSend(commands)(result)
       else throw e
     case e: SocketException =>
-      if (disconnect) send(commands)(result)
+      if (disconnect) doSend(commands)(result)
       else throw e
   }
+
+  def send[A](commands: List[CommandToSend])(result: => A): A = doSend(commands)(result)
 
   def cmd(args: Seq[Array[Byte]]): Array[Byte] = Commands.multiBulk(args)
 
